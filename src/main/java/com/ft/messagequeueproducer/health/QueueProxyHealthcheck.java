@@ -1,10 +1,7 @@
 package com.ft.messagequeueproducer.health;
 
-import com.ft.jerseyhttpwrapper.ResilientClient;
 import com.ft.jerseyhttpwrapper.config.EndpointConfiguration;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import com.ft.messagequeueproducer.HttpClient;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
@@ -16,16 +13,16 @@ import static javax.ws.rs.core.Response.Status.OK;
 public class QueueProxyHealthcheck {
 
     private final EndpointConfiguration queueProxyEndpointConfiguration;
-    private final ResilientClient queueProxyClient;
+    private final HttpClient httpClient;
     private final String topic;
     private final Map<String, String> additionalHeaders;
 
     public QueueProxyHealthcheck(final EndpointConfiguration queueProxyEndpointConfiguration,
-            final ResilientClient queueProxyClient,
+            final HttpClient httpClient,
             final String topic,
             final Map<String, String> additionalHeaders) {
         this.queueProxyEndpointConfiguration = queueProxyEndpointConfiguration;
-        this.queueProxyClient = queueProxyClient;
+        this.httpClient = httpClient;
         this.topic = topic;
         this.additionalHeaders = additionalHeaders;
     }
@@ -36,24 +33,13 @@ public class QueueProxyHealthcheck {
                 .host(queueProxyEndpointConfiguration.getHost())
                 .port(queueProxyEndpointConfiguration.getAdminPort())
                 .build(topic);
-        ClientResponse clientResponse = null;
         try {
-            final WebResource webResource = queueProxyClient.resource(uri);
-            WebResource.Builder builder = webResource.getRequestBuilder();
-            for (final Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
-                builder = builder.header(entry.getKey(), entry.getValue());
+            final HttpClient.HttpResponse response = httpClient.get(uri, additionalHeaders);
+            if (OK.getStatusCode() != response.getStatus()) {
+                return Optional.of(new Unhealthy("Status is " + response.getStatus()));
             }
-            clientResponse = builder.get(ClientResponse.class);
-            int statusCode = clientResponse.getStatus();
-            if (OK.getStatusCode() != statusCode) {
-                return Optional.of(new Unhealthy("Status is " + statusCode));
-            }
-        } catch (final ClientHandlerException ex) {
+        } catch (final HttpClient.HttpClientException ex) {
             return Optional.of(new Unhealthy(ex));
-        } finally {
-            if (clientResponse != null) {
-                clientResponse.close();
-            }
         }
         return Optional.empty();
     }

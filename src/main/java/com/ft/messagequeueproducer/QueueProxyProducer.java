@@ -24,61 +24,57 @@ import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 public class QueueProxyProducer implements MessageProducer {
 
+    public static final String TYPE_BINARY_EMBEDDED_JSON = "application/vnd.kafka.binary.v1+json";
     private static final Logger LOGGER = LoggerFactory.getLogger(QueueProxyProducer.class);
-    private static final String TYPE_BINARY_EMBEDDED_JSON = "application/vnd.kafka.binary.v1+json";
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private final Base64.Encoder encoder = Base64.getEncoder();
     private final EndpointConfiguration queueProxyEndpointConfiguration;
-    private final ResilientClient queueProxyClient;
     private final String topic;
     private final Map<String, String> additionalHeaders;
+    private final HttpClient httpClient;
 
     public QueueProxyProducer(final EndpointConfiguration queueProxyEndpointConfiguration,
-            final ResilientClient queueProxyClient,
             final String topic,
-            final Map<String, String> additionalHeaders) {
+            final Map<String, String> additionalHeaders,
+            final HttpClient httpClient) {
         this.queueProxyEndpointConfiguration = queueProxyEndpointConfiguration;
-        this.queueProxyClient = queueProxyClient;
         this.topic = topic;
         this.additionalHeaders = additionalHeaders;
+        this.httpClient = httpClient;
     }
 
     @Override
     public void send(final List<Message> messages) {
-        final URI uri = UriBuilder.fromPath(queueProxyEndpointConfiguration.getPath())
-                .scheme("http")
-                .host(queueProxyEndpointConfiguration.getHost())
-                .port(queueProxyEndpointConfiguration.getPort())
-                .build(topic);
         final List<MessageRecord> records = messages.stream()
                 .map(Message::toStringFull)
                 .map(s -> encoder.encode(s.getBytes(UTF8)))
                 .map(MessageRecord::new)
                 .collect(Collectors.toList());
+        final URI uri = UriBuilder.fromPath(queueProxyEndpointConfiguration.getPath())
+                .scheme("http")
+                .host(queueProxyEndpointConfiguration.getHost())
+                .port(queueProxyEndpointConfiguration.getPort())
+                .build(topic);
+        HttpClient.HttpResponse response;
         try {
-            final WebResource webResource = queueProxyClient.resource(uri);
-            WebResource.Builder builder = webResource.type(TYPE_BINARY_EMBEDDED_JSON);
-            for (final Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
-                builder = builder.header(entry.getKey(), entry.getValue());
-            }
-            final ClientResponse clientResponse = builder.post(ClientResponse.class, records);
-            handleNonOkStatus(clientResponse);
-        } catch (final ClientHandlerException ex) {
+            response = httpClient.post(uri, records, TYPE_BINARY_EMBEDDED_JSON, additionalHeaders);
+        } catch (HttpClient.HttpClientException ex) {
             final Optional<String> concatMsgBodies = messages.stream()
                     .map(Message::getMessageBody)
                     .reduce((s, acc) -> s + "\n" + acc);
             throw new QueueProxyUnreachableException(
                     String.format("Exception during calling Queue Proxy for [%s]", concatMsgBodies.orElse("none.")), ex);
         }
+        handleNonOkStatus(response);
     }
 
-    private void handleNonOkStatus(final ClientResponse clientResponse) {
-        int statusCode = clientResponse.getStatus();
+    private void handleNonOkStatus(final HttpClient.HttpResponse response) {
+        int statusCode = response.getStatus();
         if (OK.getStatusCode() != statusCode) {
             String clientResponseErrorMessage = "No error message from Queue Proxy.";
             try {
-                clientResponseErrorMessage = clientResponse.getEntity(String.class);
+                clientResponseErrorMessage = response.getBody();
             } catch (ClientHandlerException | UniformInterfaceException e) {
                 LOGGER.warn("Failed to parse Queue Proxy client response error message.", e);
             }
