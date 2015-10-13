@@ -1,12 +1,9 @@
 package com.ft.messagequeueproducer;
 
-import com.ft.jerseyhttpwrapper.ResilientClient;
 import com.ft.jerseyhttpwrapper.config.EndpointConfiguration;
 import com.ft.messaging.standards.message.v1.Message;
 import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
