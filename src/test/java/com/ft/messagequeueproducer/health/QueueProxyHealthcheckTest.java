@@ -1,24 +1,18 @@
 package com.ft.messagequeueproducer.health;
 
-import com.ft.jerseyhttpwrapper.config.EndpointConfiguration;
-import com.ft.messagequeueproducer.HttpClient;
-import com.google.common.base.Optional;
-import com.sun.jersey.api.client.ClientHandlerException;
-import io.dropwizard.client.JerseyClientConfiguration;
+import com.ft.messagequeueproducer.QueueProxyService;
+import com.ft.messagequeueproducer.QueueProxyServiceException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.OK;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,49 +26,29 @@ public class QueueProxyHealthcheckTest {
 
     @Test
     public void testHealthy() {
-        final EndpointConfiguration endpoitConfig = new EndpointConfiguration(Optional.<String>absent(),
-                Optional.of(new JerseyClientConfiguration()),
-                Optional.of("/test"),
-                Arrays.asList("localhost:8080"),
-                Arrays.asList("localhost:9080")
-        );
-        final HttpClient mockedClient = mock(HttpClient.class);
-        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(endpoitConfig, mockedClient, "test", HEADERS);
-        final HttpClient.HttpResponse response = new HttpClient.HttpResponse(OK.getStatusCode(), "");
-        when(mockedClient.get(URI.create("http://localhost:8080/topics"), HEADERS)).thenReturn(response);
+        final QueueProxyService mockedService = mock(QueueProxyService.class);
+        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(mockedService);
+        when(mockedService.doesConfiguredTopicExist()).thenReturn(true);
 
         assertThat(healthcheck.check().isPresent(), is(false));
     }
 
     @Test
     public void testUnhealthyWhenException() {
-        final EndpointConfiguration endpoitConfig = new EndpointConfiguration(Optional.<String>absent(),
-                Optional.of(new JerseyClientConfiguration()),
-                Optional.of("/test"),
-                Arrays.asList("localhost:8080"),
-                Arrays.asList("localhost:9080")
-        );
-        final HttpClient mockedClient = mock(HttpClient.class);
-        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(endpoitConfig, mockedClient, "test", HEADERS);
-        when(mockedClient.get(URI.create("http://localhost:8080/topics"), HEADERS))
-                .thenThrow(new HttpClient.HttpClientException("can't request", new ClientHandlerException("just because")));
+        final QueueProxyService mockedService = mock(QueueProxyService.class);
+        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(mockedService);
+        doThrow(new QueueProxyServiceException("Request interrupted", new RuntimeException("just because")))
+                .when(mockedService).doesConfiguredTopicExist();
 
-        assertThat(healthcheck.check().get().getThrowable().getMessage(), equalTo("can't request"));
+        assertThat(healthcheck.check().get().getThrowable().getMessage(), equalTo("Request interrupted"));
     }
 
     @Test
     public void testUnhealthyWhenBadStatus() {
-        final EndpointConfiguration endpoitConfig = new EndpointConfiguration(Optional.<String>absent(),
-                Optional.of(new JerseyClientConfiguration()),
-                Optional.of("/test"),
-                Arrays.asList("localhost:8080"),
-                Arrays.asList("localhost:9080")
-        );
-        final HttpClient mockedClient = mock(HttpClient.class);
-        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(endpoitConfig, mockedClient, "test", HEADERS);
-        final HttpClient.HttpResponse response = new HttpClient.HttpResponse(BAD_REQUEST.getStatusCode(), "");
-        when(mockedClient.get(URI.create("http://localhost:8080/topics"), HEADERS)).thenReturn(response);
+        final QueueProxyService mockedService = mock(QueueProxyService.class);
+        final QueueProxyHealthcheck healthcheck = new QueueProxyHealthcheck(mockedService);
+        when(mockedService.doesConfiguredTopicExist()).thenReturn(false);
 
-        assertThat(healthcheck.check().get().getMessage(), equalTo("Status is 400"));
+        assertThat(healthcheck.check().get().getMessage(), equalTo("Topic doesn't exist."));
     }
 }
