@@ -2,8 +2,6 @@ package com.ft.messagequeueproducer;
 
 import com.ft.jerseyhttpwrapper.config.EndpointConfiguration;
 import com.ft.messaging.standards.message.v1.Message;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +15,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static javax.ws.rs.core.Response.Status.OK;
-import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 public class QueueProxyProducer implements MessageProducer {
 
@@ -56,27 +53,25 @@ public class QueueProxyProducer implements MessageProducer {
         HttpClient.HttpResponse response;
         try {
             response = httpClient.post(uri, records, TYPE_BINARY_EMBEDDED_JSON, additionalHeaders);
-        } catch (HttpClient.HttpClientException ex) {
+        } catch (final HttpClient.HttpClientException ex) {
             final Optional<String> concatMsgBodies = messages.stream()
                     .map(Message::getMessageBody)
                     .reduce((s, acc) -> s + "\n" + acc);
-            throw new QueueProxyUnreachableException(
-                    String.format("Exception during calling Queue Proxy for [%s]", concatMsgBodies.orElse("none.")), ex);
+            throw new QueueProxyException(String.format("Exception during calling Queue Proxy for [%s]",
+                    concatMsgBodies.orElse("none.")), ex);
         }
         handleNonOkStatus(response);
     }
 
     private void handleNonOkStatus(final HttpClient.HttpResponse response) {
-        int statusCode = response.getStatus();
+        final int statusCode = response.getStatus();
         if (OK.getStatusCode() != statusCode) {
-            String clientResponseErrorMessage = "No error message from Queue Proxy.";
+            String clientResponseErrorMessage = "Unable to obtain body of non-OK response from Queue Proxy.";
             try {
-                clientResponseErrorMessage = response.getBody();
-            } catch (ClientHandlerException | UniformInterfaceException e) {
+                clientResponseErrorMessage = "Non-OK response was received: " + response.getBody();
+            } catch (HttpClient.HttpClientException e) {
                 LOGGER.warn("Failed to parse Queue Proxy client response error message.", e);
-            }
-            if (SERVICE_UNAVAILABLE.getStatusCode() == statusCode) {
-                throw new QueueProxyUnavailableException(clientResponseErrorMessage);
+                throw new QueueProxyException(statusCode, clientResponseErrorMessage, e);
             }
             throw new QueueProxyException(statusCode, clientResponseErrorMessage);
         }
