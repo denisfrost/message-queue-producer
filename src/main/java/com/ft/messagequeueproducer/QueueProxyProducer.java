@@ -28,7 +28,8 @@ public class QueueProxyProducer implements MessageProducer {
     private final Map<String, String> additionalHeaders;
     private final HttpClient httpClient;
 
-    public QueueProxyProducer(final EndpointConfiguration queueProxyEndpointConfiguration,
+    public QueueProxyProducer(final QueueProxyConfiguration queueProxyConfiguration,
+            final EndpointConfiguration queueProxyEndpointConfiguration,
             final String topic,
             final Map<String, String> additionalHeaders,
             final HttpClient httpClient) {
