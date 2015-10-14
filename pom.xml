@@ -10,11 +10,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ft.resilient-jersey-wrapper</groupId>
-            <artifactId>resilient-jersey-wrapper</artifactId>
-            <version>0.3.69</version>
-        </dependency>
-        <dependency>
             <groupId>com.ft</groupId>
             <artifactId>ft-async-message</artifactId>
             <version>1.0.15</version>
@@ -30,6 +25,11 @@
             <artifactId>mockito-core</artifactId>
             <version>1.10.19</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
         </dependency>
     </dependencies>
 
