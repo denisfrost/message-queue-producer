@@ -26,7 +26,7 @@ public interface HttpClient {
             return status;
         }
 
-        public String getBody() throws HttpClientException {
+        public String getBody() {
             return body;
         }
     }
