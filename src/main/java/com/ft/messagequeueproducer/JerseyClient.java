@@ -5,7 +5,6 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +58,12 @@ public class JerseyClient implements HttpClient {
         }
     }
 
-    public static URI buildUri(final QueueProxyConfiguration queueProxyConfiguration) {
-        return UriBuilder.fromUri(queueProxyConfiguration.getQueueProxyHost())
-                .path("topics")
+    @Override
+    public URI buildURI(final QueueProxyConfiguration queueProxyConfiguration) {
+        return queueProxyClient
+                .resource("topics")
                 .path(queueProxyConfiguration.getTopicName())
+                .getUriBuilder()
                 .build();
     }
 }

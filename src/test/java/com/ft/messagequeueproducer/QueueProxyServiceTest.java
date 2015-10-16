@@ -45,8 +45,9 @@ public class QueueProxyServiceTest {
         final QueueProxyConfiguration queueProxyConfiguration = new QueueProxyConfiguration("test", "http://localhost:8080", HEADERS);
         final HttpClient mockedHttpClient = mock(HttpClient.class);
         final QueueProxyService queueProxyService = new QueueProxyServiceImpl(queueProxyConfiguration, mockedHttpClient);
-
-        when(mockedHttpClient.post(eq(URI.create("http://localhost:8080/topics/test")),
+        final URI uri = URI.create("http://localhost:8080/topics/test");
+        when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
+        when(mockedHttpClient.post(eq(uri),
                 anyList(),
                 eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
                 eq(HEADERS)))
@@ -67,7 +68,9 @@ public class QueueProxyServiceTest {
             final MessageRecord record = new MessageRecord(arr);
             messages.add(record);
         }
-        when(mockedHttpClient.post(eq(URI.create("http://localhost:8080/topics/test")),
+        final URI uri = URI.create("http://localhost:8080/topics/test");
+        when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
+        when(mockedHttpClient.post(eq(uri),
                 anyList(),
                 eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
                 eq(HEADERS)))
@@ -89,7 +92,9 @@ public class QueueProxyServiceTest {
             final MessageRecord record = new MessageRecord(arr);
             messages.add(record);
         }
-        when(mockedHttpClient.post(eq(URI.create("http://localhost:8080/topics/test")),
+        final URI uri = URI.create("http://localhost:8080/topics/test");
+        when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
+        when(mockedHttpClient.post(eq(uri),
                 anyList(),
                 eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
                 eq(HEADERS)))

@@ -11,6 +11,8 @@ public interface HttpClient {
     HttpResponse post(final URI uri, final List<MessageRecord> messageRecords, final String contentType,
             final Map<String, String> additionalHeaders);
 
+    URI buildURI(final QueueProxyConfiguration queueProxyConfiguration);
+
     class HttpResponse {
 
         private final int status;

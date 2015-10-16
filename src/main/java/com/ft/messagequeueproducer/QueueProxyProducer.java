@@ -71,19 +71,19 @@ public class QueueProxyProducer implements MessageProducer {
         }
     }
 
-    interface HttpClientNeeded {
+    public interface HttpClientNeeded {
         ConfigurationNeeded withHttpClient(final HttpClient httpClient);
     }
 
-    interface JerseyClientNeeded extends HttpClientNeeded {
+    public interface JerseyClientNeeded extends HttpClientNeeded {
         ConfigurationNeeded withJerseyClient(final Client jerseyClient);
     }
 
-    interface ConfigurationNeeded {
+    public interface ConfigurationNeeded {
         BuildNeeded withQueueProxyConfiguration(final QueueProxyConfiguration queueProxyConfiguration);
     }
 
-    interface BuildNeeded {
+    public interface BuildNeeded {
         QueueProxyProducer build();
     }
 }

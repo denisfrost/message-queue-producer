@@ -26,7 +26,7 @@ public class QueueProxyServiceImpl implements QueueProxyService {
     @Override
     public void send(final List<MessageRecord> messageRecords) {
         HttpClient.HttpResponse response;
-        final URI uri = JerseyClient.buildUri(queueProxyConfiguration);
+        final URI uri = httpClient.buildURI(queueProxyConfiguration);
         try {
             response = httpClient.post(uri, messageRecords, TYPE_BINARY_EMBEDDED_JSON, queueProxyConfiguration.getAdditionalHeaders());
         } catch (final HttpClient.HttpClientException ex) {
@@ -37,7 +37,7 @@ public class QueueProxyServiceImpl implements QueueProxyService {
 
     @Override
     public boolean doesConfiguredTopicExist() {
-        final URI uri = JerseyClient.buildUri(queueProxyConfiguration);
+        final URI uri = httpClient.buildURI(queueProxyConfiguration);
         try {
             final HttpClient.HttpResponse response = httpClient.get(uri, queueProxyConfiguration.getAdditionalHeaders());
             if (NOT_FOUND.getStatusCode() != response.getStatus()) {
