@@ -1,5 +1,6 @@
 package com.ft.messagequeueproducer;
 
+import com.ft.messagequeueproducer.health.QueueProxyHealthcheck;
 import com.ft.messaging.standards.message.v1.Message;
 import com.sun.jersey.api.client.Client;
 
@@ -69,6 +70,11 @@ public class QueueProxyProducer implements MessageProducer {
         public QueueProxyProducer build() {
             return new QueueProxyProducer(new QueueProxyServiceImpl(queueProxyConfiguration, httpClient));
         }
+
+        @Override
+        public QueueProxyHealthcheck buildHealthcheck() {
+            return new QueueProxyHealthcheck(new QueueProxyServiceImpl(queueProxyConfiguration, httpClient));
+        }
     }
 
     public interface HttpClientNeeded {
@@ -85,5 +91,7 @@ public class QueueProxyProducer implements MessageProducer {
 
     public interface BuildNeeded {
         QueueProxyProducer build();
+
+        QueueProxyHealthcheck buildHealthcheck();
     }
 }
