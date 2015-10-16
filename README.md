@@ -16,15 +16,26 @@ This can be called just by `send(messages)` and the HTTP calls are handled in th
 
 You'll need
 
-* an `com.ft.jerseyhttpwrapper.config.EndpointConfiguration`
-* a `com.ft.jerseyhttpwrapper.ResilientClient`
-* a list of `com.ft.messaging.standards.message.v1.Message`s
+* a `com.sun.jersey.api.client.Client`
+* to set up a configuration in `QueueProxyConfiguration`
+* a list of `com.ft.messaging.standards.message.v1.Message`s to send
+
+example:
 
 ```java
-QueueProxyProducer producer = new QueueProxyProducer(endpointConfig, resilientClient, "my-topic")
-producer.send(messages)
+Client client = null;
+QueueProxyConfiguration config = new QueueProxyConfiguration("test", "http://localhost:8080", Collections.emptyMap());
+QueueProxyProducer producer = QueueProxyProducer.builder()
+        .withJerseyClient(client)
+        .withQueueProxyConfiguration(config)
+        .build();
+producer.send(messages);
 ```
+
+or you could use with any HTTP client with which you implement the `HttpClient` interface.
 
 ## Build
 
-`mvn clean install`
+```
+mvn clean install
+```

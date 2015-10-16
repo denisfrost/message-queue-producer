@@ -1,6 +1,7 @@
 package com.ft.messagequeueproducer;
 
 import com.ft.messaging.standards.message.v1.Message;
+import com.sun.jersey.api.client.Client;
 
 import java.nio.charset.Charset;
 import java.util.Base64;
@@ -35,5 +36,54 @@ public class QueueProxyProducer implements MessageProducer {
             throw new QueueProxyProducerException(String.format("Couldn't produce messages: [%s]",
                     concatMsgBodies.orElse("none.")), ex);
         }
+    }
+
+    public static JerseyClientNeeded builder() {
+        return new Builder();
+    }
+
+    public static class Builder implements HttpClientNeeded, JerseyClientNeeded, ConfigurationNeeded, BuildNeeded {
+
+        private HttpClient httpClient;
+        private QueueProxyConfiguration queueProxyConfiguration;
+
+        @Override
+        public ConfigurationNeeded withHttpClient(final HttpClient httpClient) {
+            this.httpClient = httpClient;
+            return this;
+        }
+
+        @Override
+        public ConfigurationNeeded withJerseyClient(final Client jerseyClient) {
+            this.httpClient = new JerseyClient(jerseyClient);
+            return this;
+        }
+
+        @Override
+        public BuildNeeded withQueueProxyConfiguration(final QueueProxyConfiguration queueProxyConfiguration) {
+            this.queueProxyConfiguration = queueProxyConfiguration;
+            return this;
+        }
+
+        @Override
+        public QueueProxyProducer build() {
+            return new QueueProxyProducer(new QueueProxyServiceImpl(queueProxyConfiguration, httpClient));
+        }
+    }
+
+    interface HttpClientNeeded {
+        ConfigurationNeeded withHttpClient(final HttpClient httpClient);
+    }
+
+    interface JerseyClientNeeded extends HttpClientNeeded {
+        ConfigurationNeeded withJerseyClient(final Client jerseyClient);
+    }
+
+    interface ConfigurationNeeded {
+        BuildNeeded withQueueProxyConfiguration(final QueueProxyConfiguration queueProxyConfiguration);
+    }
+
+    interface BuildNeeded {
+        QueueProxyProducer build();
     }
 }

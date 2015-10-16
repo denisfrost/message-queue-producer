@@ -10,9 +10,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ft.resilient-jersey-wrapper</groupId>
-            <artifactId>resilient-jersey-wrapper</artifactId>
-            <version>0.3.69</version>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.18.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
         </dependency>
         <dependency>
             <groupId>com.ft</groupId>

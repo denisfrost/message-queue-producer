@@ -1,7 +1,6 @@
 package com.ft.messagequeueproducer;
 
-
-import com.ft.jerseyhttpwrapper.ResilientClient;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -13,9 +12,9 @@ import java.util.Map;
 
 public class JerseyClient implements HttpClient {
 
-    private final ResilientClient queueProxyClient;
+    private final Client queueProxyClient;
 
-    public JerseyClient(final ResilientClient queueProxyClient) {
+    public JerseyClient(final Client queueProxyClient) {
         this.queueProxyClient = queueProxyClient;
     }
 
