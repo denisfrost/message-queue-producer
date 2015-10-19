@@ -10,7 +10,7 @@ This can be called just by `send(messages)` and the HTTP calls are handled in th
 <dependency>
     <groupId>com.ft</groupId>
     <artifactId>message-queue-producer</artifactId>
-    <version>1.0.0.-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
