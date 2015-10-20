@@ -1,6 +1,8 @@
 package com.ft.messagequeueproducer;
 
 import com.ft.messagequeueproducer.health.QueueProxyHealthcheck;
+import com.ft.messagequeueproducer.model.MessageRecord;
+import com.ft.messagequeueproducer.model.MessageWithRecords;
 import com.ft.messaging.standards.message.v1.Message;
 import com.sun.jersey.api.client.Client;
 
@@ -28,8 +30,10 @@ public class QueueProxyProducer implements MessageProducer {
                 .map(s -> encoder.encode(s.getBytes(UTF8)))
                 .map(MessageRecord::new)
                 .collect(Collectors.toList());
+        final MessageWithRecords messageWithRecords =
+                new MessageWithRecords(records);
         try {
-            queueProxyService.send(records);
+            queueProxyService.send(messageWithRecords);
         } catch (QueueProxyServiceException ex) {
             final Optional<String> concatMsgBodies = messages.stream()
                     .map(Message::getMessageBody)

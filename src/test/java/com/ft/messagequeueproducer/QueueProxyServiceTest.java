@@ -1,5 +1,7 @@
 package com.ft.messagequeueproducer;
 
+import com.ft.messagequeueproducer.model.MessageWithRecords;
+import com.ft.messagequeueproducer.model.MessageRecord;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,10 +14,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.OK;
-import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,6 +39,7 @@ public class QueueProxyServiceTest {
             RECORDS.add(record);
         }
     }}
+    private final static MessageWithRecords MESSAGE_WITH_RECORDS = new MessageWithRecords(RECORDS);
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -48,12 +52,11 @@ public class QueueProxyServiceTest {
         final URI uri = URI.create("http://localhost:8080/topics/test");
         when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
         when(mockedHttpClient.post(eq(uri),
-                anyList(),
-                eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
-                eq(HEADERS)))
+                any(MessageWithRecords.class),
+                eq(Optional.of(HEADERS))))
                 .thenReturn(new HttpClient.HttpResponse(OK.getStatusCode(), ""));
 
-        queueProxyService.send(RECORDS);
+        queueProxyService.send(MESSAGE_WITH_RECORDS);
     }
 
     @Test
@@ -61,23 +64,15 @@ public class QueueProxyServiceTest {
         final QueueProxyConfiguration queueProxyConfiguration = new QueueProxyConfiguration("test", "http://localhost:8080", HEADERS);
         final HttpClient mockedHttpClient = mock(HttpClient.class);
         final QueueProxyService queueProxyService = new QueueProxyServiceImpl(queueProxyConfiguration, mockedHttpClient);
-        final List<MessageRecord> messages = new ArrayList<>();
-        for (byte i = 0; i < 2; i++) {
-            byte[] arr = new byte[1];
-            arr[0] = i;
-            final MessageRecord record = new MessageRecord(arr);
-            messages.add(record);
-        }
         final URI uri = URI.create("http://localhost:8080/topics/test");
         when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
         when(mockedHttpClient.post(eq(uri),
-                anyList(),
-                eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
-                eq(HEADERS)))
+                any(MessageWithRecords.class),
+                eq(Optional.of(HEADERS))))
                 .thenReturn(new HttpClient.HttpResponse(BAD_REQUEST.getStatusCode(), ""));
         thrown.expect(QueueProxyServiceException.class);
 
-        queueProxyService.send(messages);
+        queueProxyService.send(MESSAGE_WITH_RECORDS);
     }
 
     @Test
@@ -85,22 +80,14 @@ public class QueueProxyServiceTest {
         final QueueProxyConfiguration queueProxyConfiguration = new QueueProxyConfiguration("test", "http://localhost:8080", HEADERS);
         final HttpClient mockedHttpClient = mock(HttpClient.class);
         final QueueProxyService queueProxyService = new QueueProxyServiceImpl(queueProxyConfiguration, mockedHttpClient);
-        final List<MessageRecord> messages = new ArrayList<>();
-        for (byte i = 0; i < 2; i++) {
-            byte[] arr = new byte[1];
-            arr[0] = i;
-            final MessageRecord record = new MessageRecord(arr);
-            messages.add(record);
-        }
         final URI uri = URI.create("http://localhost:8080/topics/test");
         when(mockedHttpClient.buildURI(queueProxyConfiguration)).thenReturn(uri);
         when(mockedHttpClient.post(eq(uri),
-                anyList(),
-                eq(QueueProxyServiceImpl.TYPE_BINARY_EMBEDDED_JSON),
-                eq(HEADERS)))
+                any(MessageWithRecords.class),
+                eq(Optional.of(HEADERS))))
                 .thenThrow(new HttpClient.HttpClientException("couldn't request", new ClientHandlerException("no")));
         thrown.expect(QueueProxyServiceException.class);
 
-        queueProxyService.send(messages);
+        queueProxyService.send(MESSAGE_WITH_RECORDS);
     }
 }

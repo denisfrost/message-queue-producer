@@ -1,15 +1,19 @@
 package com.ft.messagequeueproducer;
 
+import com.ft.messagequeueproducer.model.MessageWithRecords;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class JerseyClient implements HttpClient {
+
+    private static final String JSON = "application/json";
 
     private final Client queueProxyClient;
 
@@ -18,13 +22,15 @@ public class JerseyClient implements HttpClient {
     }
 
     @Override
-    public HttpResponse get(final URI uri, final Map<String, String> additionalHeaders) {
+    public HttpResponse get(final URI uri, final Optional<Map<String, String>> additionalHeaders) {
         ClientResponse clientResponse = null;
         try {
             final WebResource webResource = queueProxyClient.resource(uri);
             WebResource.Builder builder = webResource.getRequestBuilder();
-            for (final Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
-                builder = builder.header(entry.getKey(), entry.getValue());
+            if (additionalHeaders.isPresent()) {
+                for (final Map.Entry<String, String> entry : additionalHeaders.get().entrySet()) {
+                    builder = builder.header(entry.getKey(), entry.getValue());
+                }
             }
             clientResponse = builder.get(ClientResponse.class);
             return new HttpResponse(clientResponse.getStatus(), clientResponse.getEntity(String.class));
@@ -38,16 +44,18 @@ public class JerseyClient implements HttpClient {
     }
 
     @Override
-    public HttpResponse post(final URI uri, final List<MessageRecord> messageRecords, final String contentType,
-            final Map<String, String> additionalHeaders) {
+    public HttpResponse post(final URI uri, final MessageWithRecords messageWithRecords,
+            final Optional<Map<String, String>> additionalHeaders) {
         ClientResponse clientResponse = null;
         try {
             final WebResource webResource = queueProxyClient.resource(uri);
-            WebResource.Builder builder = webResource.type(contentType);
-            for (final Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
-                builder = builder.header(entry.getKey(), entry.getValue());
+            WebResource.Builder builder = webResource.type(JSON);
+            if (additionalHeaders.isPresent()) {
+                for (final Map.Entry<String, String> entry : additionalHeaders.get().entrySet()) {
+                    builder = builder.header(entry.getKey(), entry.getValue());
+                }
             }
-            clientResponse = builder.post(ClientResponse.class, messageRecords);
+            clientResponse = builder.post(ClientResponse.class, messageWithRecords);
             return new HttpResponse(clientResponse.getStatus(), clientResponse.getEntity(String.class));
         } catch (final ClientHandlerException ex) {
             throw new HttpClientException("Jersey client throwing exception.", ex);
@@ -60,10 +68,9 @@ public class JerseyClient implements HttpClient {
 
     @Override
     public URI buildURI(final QueueProxyConfiguration queueProxyConfiguration) {
-        return queueProxyClient
-                .resource("topics")
+        return UriBuilder.fromUri("http://" + queueProxyConfiguration.getProxyHostAndPort())
+                .path("topics")
                 .path(queueProxyConfiguration.getTopicName())
-                .getUriBuilder()
                 .build();
     }
 }

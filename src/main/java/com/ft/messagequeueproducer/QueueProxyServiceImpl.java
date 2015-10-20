@@ -1,10 +1,10 @@
 package com.ft.messagequeueproducer;
 
+import com.ft.messagequeueproducer.model.MessageWithRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.List;
 
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -24,11 +24,11 @@ public class QueueProxyServiceImpl implements QueueProxyService {
     }
 
     @Override
-    public void send(final List<MessageRecord> messageRecords) {
+    public void send(final MessageWithRecords messageWithRecords) {
         HttpClient.HttpResponse response;
         final URI uri = httpClient.buildURI(queueProxyConfiguration);
         try {
-            response = httpClient.post(uri, messageRecords, TYPE_BINARY_EMBEDDED_JSON, queueProxyConfiguration.getAdditionalHeaders());
+            response = httpClient.post(uri, messageWithRecords, queueProxyConfiguration.getAdditionalHeaders());
         } catch (final HttpClient.HttpClientException ex) {
             throw new QueueProxyServiceException("Couldn't send records.", ex);
         }
@@ -40,7 +40,7 @@ public class QueueProxyServiceImpl implements QueueProxyService {
         final URI uri = httpClient.buildURI(queueProxyConfiguration);
         try {
             final HttpClient.HttpResponse response = httpClient.get(uri, queueProxyConfiguration.getAdditionalHeaders());
-            if (NOT_FOUND.getStatusCode() != response.getStatus()) {
+            if (NOT_FOUND.getStatusCode() == response.getStatus()) {
                 return false;
             } else if (OK.getStatusCode() != response.getStatus()) {
                 throw new QueueProxyServiceException(response.getStatus(), "Queue proxy responded with not expected status.");
