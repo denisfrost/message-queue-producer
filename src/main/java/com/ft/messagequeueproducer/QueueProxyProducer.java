@@ -1,6 +1,7 @@
 package com.ft.messagequeueproducer;
 
 import com.ft.messagequeueproducer.health.QueueProxyHealthcheck;
+import com.ft.messagequeueproducer.model.KeyedMessage;
 import com.ft.messagequeueproducer.model.MessageRecord;
 import com.ft.messagequeueproducer.model.MessageWithRecords;
 import com.ft.messaging.standards.message.v1.Message;
@@ -24,8 +25,7 @@ public class QueueProxyProducer implements MessageProducer {
     @Override
     public void send(final List<Message> messages) {
         final List<MessageRecord> records = messages.stream()
-                .map(Message::toStringFull)
-                .map(s -> new MessageRecord(s.getBytes(UTF8)))
+            .map(msg -> createMessageRecord(msg))
                 .collect(Collectors.toList());
         final MessageWithRecords messageWithRecords =
                 new MessageWithRecords(records);
@@ -40,6 +40,16 @@ public class QueueProxyProducer implements MessageProducer {
         }
     }
 
+    private MessageRecord createMessageRecord(Message message) {
+      String key = "";
+      if (message instanceof KeyedMessage) {
+        key = ((KeyedMessage)message).getKey();
+      }
+      
+      String txt = message.toStringFull();
+      return new MessageRecord(key.getBytes(UTF8), txt.getBytes(UTF8));
+    }
+    
     public static JerseyClientNeeded builder() {
         return new Builder();
     }
