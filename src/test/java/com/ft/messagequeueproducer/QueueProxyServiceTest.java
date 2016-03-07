@@ -35,7 +35,7 @@ public class QueueProxyServiceTest {
         for (byte i = 0; i < 2; i++) {
             byte[] arr = new byte[1];
             arr[0] = i;
-            final MessageRecord record = new MessageRecord(arr);
+            final MessageRecord record = new MessageRecord(null, arr);
             RECORDS.add(record);
         }
     }}
