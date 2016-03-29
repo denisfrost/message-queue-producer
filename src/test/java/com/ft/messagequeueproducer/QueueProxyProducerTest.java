@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QueueProxyProducerTest {
@@ -99,5 +100,12 @@ public class QueueProxyProducerTest {
         thrown.expect(QueueProxyProducerException.class);
 
         producer.send(MESSAGES);
+    }
+
+    @Test
+    public void thatEmptyListIsAcceptedButSendsNoRequestsToProxy() {
+        producer.send(Collections.emptyList());
+        
+        verifyZeroInteractions(mockedService);
     }
 }
