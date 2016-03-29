@@ -24,6 +24,10 @@ public class QueueProxyProducer implements MessageProducer {
 
     @Override
     public void send(final List<Message> messages) {
+      if (messages.isEmpty()) {
+        return; // do nothing
+      }
+      
         final List<MessageRecord> records = messages.stream()
             .map(msg -> createMessageRecord(msg))
                 .collect(Collectors.toList());
