@@ -54,7 +54,7 @@ public class QueueProxyProducer implements MessageProducer {
       return new MessageRecord(key.getBytes(UTF8), txt.getBytes(UTF8));
     }
     
-    public static JerseyClientNeeded builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -72,6 +72,11 @@ public class QueueProxyProducer implements MessageProducer {
         @Override
         public ConfigurationNeeded withJerseyClient(final Client jerseyClient) {
             this.httpClient = new JerseyClient(jerseyClient);
+            return this;
+        }
+
+        public ConfigurationNeeded withJersey2Client(final javax.ws.rs.client.Client jerseyClient) {
+            this.httpClient = new Jersey2Client(jerseyClient);
             return this;
         }
 
