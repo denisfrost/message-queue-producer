@@ -1,0 +1,8 @@
+machine:
+  java:
+    version: oraclejdk8
+  timezone:
+    Europe/London
+test:
+  override:
+    - mvn clean install -s settings.xml
