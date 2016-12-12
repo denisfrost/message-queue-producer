@@ -6,7 +6,20 @@
 
     <groupId>com.ft</groupId>
     <artifactId>message-queue-producer</artifactId>
-    <version>1.0.5</version>
+    <version>0.0.2</version>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Internal Releases</name>
+            <url>https://nexus.in.ft.com/repository/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <uniqueVersion>true</uniqueVersion>
+            <url>https://nexus.in.ft.com/repository/snapshots/</url>
+        </snapshotRepository>
+	</distributionManagement>
 
     <dependencies>
         <dependency>
