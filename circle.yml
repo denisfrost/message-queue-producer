@@ -10,4 +10,4 @@ dependencies:
 
 test:
   override:
-    - mvn clean install -s settings.xml
+    - mvn install -s settings.xml
