@@ -3,6 +3,11 @@ machine:
     version: oraclejdk8
   timezone:
     Europe/London
+
+dependencies:
+ override: 
+  - mvn dependency:resolve -s settings.xml
+
 test:
   override:
     - mvn clean install -s settings.xml
